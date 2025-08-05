@@ -150,6 +150,19 @@ const TrackingStatusComponent: React.FC<TrackingStatusProps> = ({
         </button>
       </div>
 
+      {/* Store Setup Warning */}
+      {(trackingData as any).error === 'missing_store' && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+          <div className="flex items-center space-x-1 text-xs text-yellow-800">
+            <AlertCircle className="w-3 h-3" />
+            <span className="font-medium">Store setup required</span>
+          </div>
+          <div className="text-xs text-yellow-700 mt-1">
+            Configure your store in Trackship to get real tracking data
+          </div>
+        </div>
+      )}
+
       {/* Tracking Details */}
       <div className="text-xs text-gray-600 space-y-1">
         {trackingData.carrier && (

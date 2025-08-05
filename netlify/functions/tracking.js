@@ -44,7 +44,58 @@ exports.handler = async (event, context) => {
     const data = await response.json();
     console.log('Trackship response:', data);
 
-    // For now, return mock data since we need to handle the missing_store issue
+    // Check if Trackship returned an error
+    if (data.status === 'error') {
+      console.log('Trackship error:', data.status_msg);
+      
+      // If it's a missing_store error, we need to handle this differently
+      if (data.status_msg === 'missing_store') {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            data: {
+              trackingNumber,
+              status: 'pending',
+              lastActivity: new Date().toISOString(),
+              estimatedDelivery: null,
+              currentLocation: 'Store not configured',
+              statusDescription: 'Store setup required in Trackship',
+              carrier: detectCarrier(trackingNumber).toUpperCase(),
+              trackshipResponse: data,
+              error: 'missing_store'
+            }
+          })
+        });
+      }
+    }
+
+    // If Trackship returned success, try to get actual tracking data
+    if (data.status === 'success' && data.data) {
+      // Parse the actual tracking data from Trackship
+      const trackingData = data.data;
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          data: {
+            trackingNumber,
+            status: trackingData.status || 'pending',
+            lastActivity: trackingData.last_activity || new Date().toISOString(),
+            estimatedDelivery: trackingData.estimated_delivery || null,
+            currentLocation: trackingData.current_location || 'Unknown',
+            statusDescription: trackingData.status_description || 'Tracking available',
+            carrier: trackingData.carrier || detectCarrier(trackingNumber).toUpperCase(),
+            trackshipResponse: data
+          }
+        })
+      });
+    }
+
+    // Fallback to mock data if we can't parse the response
     return {
       statusCode: 200,
       headers,
@@ -52,16 +103,16 @@ exports.handler = async (event, context) => {
         success: true,
         data: {
           trackingNumber,
-          status: 'shipped',
+          status: 'pending',
           lastActivity: new Date().toISOString(),
-          estimatedDelivery: '2024-01-20',
-          currentLocation: 'Distribution Center',
-          statusDescription: 'Package in transit',
+          estimatedDelivery: null,
+          currentLocation: 'Unknown',
+          statusDescription: 'Tracking data unavailable',
           carrier: detectCarrier(trackingNumber).toUpperCase(),
           trackshipResponse: data
         }
       })
-    };
+    });
   } catch (error) {
     console.error('Tracking API error:', error);
     
