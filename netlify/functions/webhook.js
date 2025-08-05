@@ -19,7 +19,25 @@ exports.handler = async (event, context) => {
     // Parse the webhook data
     const webhookData = JSON.parse(event.body);
     
-    console.log('Received webhook from Trackship:', webhookData);
+    console.log('Received webhook from Trackship:', JSON.stringify(webhookData, null, 2));
+    
+    // Extract key information from Trackship webhook
+    const {
+      user_key,
+      order_id,
+      tracking_number,
+      tracking_provider,
+      tracking_event_status,
+      events = []
+    } = webhookData;
+    
+    console.log('Processed webhook data:', {
+      orderId: order_id,
+      trackingNumber: tracking_number,
+      provider: tracking_provider,
+      status: tracking_event_status,
+      eventCount: events.length
+    });
     
     // Here you would typically:
     // 1. Store the webhook data in a database
@@ -27,7 +45,6 @@ exports.handler = async (event, context) => {
     // 3. Send notifications
     // 4. Trigger other business logic
     
-    // For now, we'll just log it
     console.log('Webhook processed successfully');
     
     return {
