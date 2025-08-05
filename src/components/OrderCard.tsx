@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Package, MapPin, Calendar, Truck, CheckCircle } from 'lucide-react';
 import { ShippingOrder } from '../types';
 import clsx from 'clsx';
@@ -11,6 +11,15 @@ interface OrderCardProps {
 }
 
 const OrderCard: React.FC<OrderCardProps> = ({ order, onEdit, onStatusChange }) => {
+  const handleStatusUpdate = useCallback((status: 'pending' | 'shipped' | 'delivered') => {
+    onStatusChange(order.id, status);
+  }, [order.id, onStatusChange]);
+
+  const handleEstimatedDeliveryUpdate = useCallback((date: string) => {
+    // You could add a callback to update the order's estimated delivery
+    console.log('Estimated delivery updated:', date);
+  }, []);
+
   const getStatusIcon = (status: ShippingOrder['status']) => {
     switch (status) {
       case 'pending':
@@ -83,11 +92,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onEdit, onStatusChange }) 
             <TrackingStatusComponent
               trackingNumber={order.trackingCode}
               currentStatus={order.status}
-              onStatusUpdate={(status) => onStatusChange(order.id, status)}
-              onEstimatedDeliveryUpdate={(date) => {
-                // You could add a callback to update the order's estimated delivery
-                console.log('Estimated delivery updated:', date);
-              }}
+              onStatusUpdate={handleStatusUpdate}
+              onEstimatedDeliveryUpdate={handleEstimatedDeliveryUpdate}
             />
           )}
         </div>

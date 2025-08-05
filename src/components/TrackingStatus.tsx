@@ -19,6 +19,7 @@ const TrackingStatusComponent: React.FC<TrackingStatusProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const fetchTrackingStatus = useCallback(async () => {
     if (!trackingNumber) return;
@@ -54,10 +55,12 @@ const TrackingStatusComponent: React.FC<TrackingStatusProps> = ({
   }, [trackingNumber, onStatusUpdate, onEstimatedDeliveryUpdate]);
 
   useEffect(() => {
-    if (trackingNumber) {
+    if (trackingNumber && !isInitialized) {
+      // Only fetch on initial load
       fetchTrackingStatus();
+      setIsInitialized(true);
     }
-  }, [trackingNumber, fetchTrackingStatus]);
+  }, [trackingNumber, fetchTrackingStatus, isInitialized]);
 
   const getStatusIcon = (status: 'pending' | 'shipped' | 'delivered') => {
     switch (status) {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import Header from './components/Header';
 import OrderCard from './components/OrderCard';
 import OrderTable from './components/OrderTable';
@@ -33,17 +33,17 @@ function App() {
     };
   }, [orders]);
 
-  const handleAddOrder = () => {
+  const handleAddOrder = useCallback(() => {
     setEditingOrder(null);
     setIsFormOpen(true);
-  };
+  }, []);
 
-  const handleEditOrder = (order: ShippingOrder) => {
+  const handleEditOrder = useCallback((order: ShippingOrder) => {
     setEditingOrder(order);
     setIsFormOpen(true);
-  };
+  }, []);
 
-  const handleSaveOrder = (orderData: Omit<ShippingOrder, 'id' | 'orderDate'>) => {
+  const handleSaveOrder = useCallback((orderData: Omit<ShippingOrder, 'id' | 'orderDate'>) => {
     if (editingOrder) {
       // Update existing order
       setOrders(prev => prev.map(order => 
@@ -60,15 +60,15 @@ function App() {
       };
       setOrders(prev => [newOrder, ...prev]);
     }
-  };
+  }, [editingOrder]);
 
-  const handleStatusChange = (orderId: string, status: ShippingOrder['status']) => {
+  const handleStatusChange = useCallback((orderId: string, status: ShippingOrder['status']) => {
     setOrders(prev => prev.map(order => 
       order.id === orderId 
         ? { ...order, status }
         : order
     ));
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
