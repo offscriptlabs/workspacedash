@@ -67,7 +67,7 @@ exports.handler = async (event, context) => {
               error: 'missing_store'
             }
           })
-        });
+        };
       }
     }
 
@@ -92,7 +92,7 @@ exports.handler = async (event, context) => {
             trackshipResponse: data
           }
         })
-      });
+      };
     }
 
     // Fallback to mock data if we can't parse the response
@@ -112,7 +112,7 @@ exports.handler = async (event, context) => {
           trackshipResponse: data
         }
       })
-    });
+    };
   } catch (error) {
     console.error('Tracking API error:', error);
     
