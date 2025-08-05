@@ -9,5 +9,5 @@
   status = 200
 
 [build.environment]
-  REACT_APP_USE_PROXY_API = "false"
+  REACT_APP_USE_PROXY_API = "true"
   REACT_APP_USE_REAL_TRACKSHIP_API = "true" 

@@ -233,13 +233,21 @@ export const getTrackingService = () => {
   const useRealApi = process.env.REACT_APP_USE_REAL_TRACKSHIP_API === 'true';
   const hasCredentials = process.env.REACT_APP_TRACKSHIP_API_KEY;
   const useProxy = process.env.REACT_APP_USE_PROXY_API === 'true';
+  const isProduction = window.location.hostname !== 'localhost';
   
   console.log('Environment check:', {
     useRealApi,
     hasCredentials: !!hasCredentials,
     useProxy,
+    isProduction,
     apiKey: hasCredentials ? hasCredentials.substring(0, 10) + '...' : 'None'
   });
+  
+  if (isProduction && useProxy) {
+    console.log('Using Netlify API service for production');
+    const { netlifyApiService } = require('./netlifyApi');
+    return netlifyApiService;
+  }
   
   if (useProxy) {
     console.log('Using proxy API service');
