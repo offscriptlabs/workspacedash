@@ -1,14 +1,12 @@
 const fetch = require('node-fetch');
 
 exports.handler = async (event, context) => {
-  // Enable CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 
-  // Handle preflight requests
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -44,73 +42,37 @@ exports.handler = async (event, context) => {
     const data = await response.json();
     console.log('Trackship response:', data);
 
-    // Check if Trackship returned an error
-    if (data.status === 'error') {
-      console.log('Trackship error:', data.status_msg);
-      
-      // If it's a missing_store error, we need to handle this differently
-      if (data.status_msg === 'missing_store') {
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify({
-            success: true,
-            data: {
-              trackingNumber,
-              status: 'pending',
-              lastActivity: new Date().toISOString(),
-              estimatedDelivery: null,
-              currentLocation: 'Store not configured',
-              statusDescription: 'Store setup required in Trackship',
-              carrier: detectCarrier(trackingNumber).toUpperCase(),
-              trackshipResponse: data,
-              error: 'missing_store'
-            }
-          })
-        };
-      }
-    }
+    let responseData = {
+      trackingNumber,
+      status: 'pending',
+      lastActivity: new Date().toISOString(),
+      estimatedDelivery: null,
+      currentLocation: 'Unknown',
+      statusDescription: 'Tracking data unavailable',
+      carrier: detectCarrier(trackingNumber).toUpperCase(),
+      trackshipResponse: data
+    };
 
-    // If Trackship returned success, try to get actual tracking data
-    if (data.status === 'success' && data.data) {
-      // Parse the actual tracking data from Trackship
+    if (data.status === 'error' && data.status_msg === 'missing_store') {
+      responseData.statusDescription = 'Store setup required in Trackship';
+      responseData.currentLocation = 'Store not configured';
+      responseData.error = 'missing_store';
+    } else if (data.status === 'success' && data.data) {
       const trackingData = data.data;
-      
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          success: true,
-          data: {
-            trackingNumber,
-            status: trackingData.status || 'pending',
-            lastActivity: trackingData.last_activity || new Date().toISOString(),
-            estimatedDelivery: trackingData.estimated_delivery || null,
-            currentLocation: trackingData.current_location || 'Unknown',
-            statusDescription: trackingData.status_description || 'Tracking available',
-            carrier: trackingData.carrier || detectCarrier(trackingNumber).toUpperCase(),
-            trackshipResponse: data
-          }
-        })
-      };
+      responseData.status = trackingData.status || 'pending';
+      responseData.lastActivity = trackingData.last_activity || new Date().toISOString();
+      responseData.estimatedDelivery = trackingData.estimated_delivery || null;
+      responseData.currentLocation = trackingData.current_location || 'Unknown';
+      responseData.statusDescription = trackingData.status_description || 'Tracking available';
+      responseData.carrier = trackingData.carrier || detectCarrier(trackingNumber).toUpperCase();
     }
 
-    // Fallback to mock data if we can't parse the response
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
-        data: {
-          trackingNumber,
-          status: 'pending',
-          lastActivity: new Date().toISOString(),
-          estimatedDelivery: null,
-          currentLocation: 'Unknown',
-          statusDescription: 'Tracking data unavailable',
-          carrier: detectCarrier(trackingNumber).toUpperCase(),
-          trackshipResponse: data
-        }
+        data: responseData
       })
     };
   } catch (error) {
